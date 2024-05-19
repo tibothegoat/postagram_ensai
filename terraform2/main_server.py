@@ -4,19 +4,19 @@ from cdktf import App, TerraformStack
 from cdktf_cdktf_provider_aws.provider import AwsProvider
 from cdktf_cdktf_provider_aws.default_vpc import DefaultVpc
 from cdktf_cdktf_provider_aws.default_subnet import DefaultSubnet
-from cdktf_cdktf_provider_aws.launch_template import LaunchTemplate, LaunchTemplateIamInstanceProfile
+from cdktf_cdktf_provider_aws.launch_template import LaunchTemplate
 from cdktf_cdktf_provider_aws.lb import Lb
 from cdktf_cdktf_provider_aws.lb_target_group import LbTargetGroup
-from cdktf_cdktf_provider_aws.lb_listener import LbListener, LbListenerDefaultAction
+from cdktf_cdktf_provider_aws.lb_listener import LbListener
 from cdktf_cdktf_provider_aws.autoscaling_group import AutoscalingGroup
 from cdktf_cdktf_provider_aws.security_group import SecurityGroup, SecurityGroupIngress, SecurityGroupEgress
 from cdktf_cdktf_provider_aws.data_aws_caller_identity import DataAwsCallerIdentity
 
 import base64
 
-bucket="buckettibo5"
-dynamo_table="dynamodbtibo5"
-your_repo="https://github.com/tibothegoat/postagram_ensai"
+bucket=""
+dynamo_table=""
+your_repo=""
 
 
 user_data= base64.b64encode(f"""
@@ -27,7 +27,7 @@ echo 'export DYNAMO_TABLE={dynamo_table}' >> /etc/environment
 apt update
 apt install -y python3-pip
 git clone {your_repo}
-cd postagram_ensai
+cd Ensai-CloudComputingLab1
 pip3 install -r requirements.txt
 python3 app.py
 echo "userdata-end""".encode("ascii")).decode("ascii")
@@ -87,43 +87,16 @@ class ServerStack(TerraformStack):
             ]
             )
         
-        launch_template = LaunchTemplate(self, "launch template",
-            image_id="ami-080e1f13689e07408",
-            instance_type="t2.micro", # le type de l'instance
-            vpc_security_group_ids = [security_group.id],
-            key_name="vockey",
-            iam_instance_profile=LaunchTemplateIamInstanceProfile(
-                arn=f"arn:aws:iam::{account_id}:instance-profile/LabInstanceProfile"
-            ),
-            user_data=user_data,
-            tags={"Name":"template TF"})
+        launch_template = LaunchTemplate()
         
-        lb = Lb(self, "lb",
-            load_balancer_type="application",
-            security_groups=[security_group.id],
-            subnets=subnets)
+        lb = Lb()
 
-        target_group=LbTargetGroup(self, "tg_group",
-            port=80,
-            protocol="HTTP",
-            vpc_id=default_vpc.id,
-            target_type="instance")
+        target_group=LbTargetGroup()
 
-        lb_listener = LbListener(self, "lb_listener",
-            load_balancer_arn=lb.arn,
-            port=80,
-            protocol="HTTP",
-            default_action=[LbListenerDefaultAction(type="forward", target_group_arn=target_group.arn)]
-        )
+        lb_listener = LbListener()
 
-        asg = AutoscalingGroup(self, "asg",
-            min_size=2,
-            max_size=4,
-            desired_capacity=2,
-            launch_template={"id":launch_template.id},
-            vpc_zone_identifier= subnets,
-            target_group_arns=[target_group.arn])
-        
+        asg = AutoscalingGroup()
+
 
 app = App()
 ServerStack(app, "cdktf_server")
